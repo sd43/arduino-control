@@ -2,7 +2,8 @@
 
 import logging
 
-from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox, QStyleFactory, QWidget, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QIntValidator
 
 from control import Controller
 
@@ -12,10 +13,14 @@ class ControlWindow(QDialog):
 
         self.createConnectionBar()
         self.createControlBox()
+        self.createCommandBox()
+        self.createLogBox()
 
-        mainLayout = QGridLayout()
-        mainLayout.addLayout(self.connectionBar, 0, 0, 1, 1)
-        mainLayout.addLayout(self.controlBox, 1, 0, 1, 2)
+        mainLayout = QVBoxLayout()
+        mainLayout.addLayout(self.connectionBar)
+        mainLayout.addLayout(self.controlBox)
+        mainLayout.addLayout(self.commandBox)
+        mainLayout.addWidget(self.logBox)
         self.setLayout(mainLayout)
 
     def showError(self, message):
@@ -82,10 +87,110 @@ class ControlWindow(QDialog):
 
         self.controlBox = layout
 
+    def createCommandBox(self):
+        items = [
+                {
+                    'label': 'Read Pin',
+                    'command': 'read',
+                    'inputs': [ {'name': 'Pin', 'type': 'int' } ],
+                    'outputs': [ {'name': 'Value', 'type': 'int' } ],
+                },
+                {
+                    'label': 'Write Pin',
+                    'command': 'write',
+                    'inputs': [ {'name': 'Pin', 'type': 'int' }, {'name': 'Value', 'type': 'int' } ],
+                    'outputs': [ ],
+                },
+                {
+                    'label': 'Ping',
+                    'command': 'ping',
+                    'inputs': [],
+                    'outputs': [],
+                },
+        ]
+
+        layout = QGridLayout()
+        row = 0 
+
+        layout.addWidget(QLabel('<i>Command</i>'), row, 0)
+        layout.addWidget(QLabel('<i>Inputs</i>'), row, 1)
+        layout.addWidget(QLabel('<i>Outputs</i>'), row, 2)
+        layout.addWidget(QLabel('<i>Send</i>'), row, 3)
+
+        for item in items:
+            row += 1
+            layout.addWidget(QLabel('<b>'+item['label']+'</b>'), row, 0)
+            wInputs = []
+            wOutputs = []
+
+            if len(item['inputs']) > 0:
+                wLayout = QHBoxLayout()
+                for inp in item['inputs']:
+                    wInput = QLineEdit(placeholderText=inp['name'])
+                    if inp['type'] == 'int':
+                        wInput.setValidator(QIntValidator(0, 999999))
+
+                    wInputs.append(wInput)
+                    wLayout.addWidget(wInput)
+                layout.addLayout(wLayout, row, 1)
+
+            if len(item['outputs']) > 0:
+                wLayout = QHBoxLayout()
+                for out in item['outputs']:
+                    wOutput = QLineEdit(placeholderText=out['name'])
+                    wOutput.setReadOnly(True)
+                    wOutputs.append(wOutput)
+                    wLayout.addWidget(wOutput)
+                layout.addLayout(wLayout, row, 2)
+
+            def onSendCallback(command, wInputs, wOutputs):
+                def fn():
+                    try:
+                        args = [ w.text() for w in wInputs ]
+                        output = self.controller.command(command, args)
+                        for (wOutput, output) in zip(wOutputs, output.split(',')):
+                            wOutput.setText(output)
+
+                    except Exception as e:
+                        self.showError('Failed to send command: ' + str(e))
+                return fn
+
+            wSend = QPushButton('->')
+            wSend.clicked.connect(onSendCallback(item['command'], wInputs, wOutputs))
+            layout.addWidget(wSend, row, 3)
+
+        self.commandBox = layout
+
+    def createLogBox(self):
+        self.logBox = QPlainTextEdit()
+        self.logBox.setReadOnly(True)
+
+    def addLogEntry(self, logEntry):
+        if 'type' in logEntry:
+            color = 'black'
+            type_ = logEntry['type']
+
+            if logEntry['type'] == 'read':
+                color = 'blue'
+                type_ = 'RECEIVE'
+            elif logEntry['type'] == 'write':
+                color = 'brown'
+                type_ = 'SEND'
+
+            text = '<pre><font color="{}"><b>{:<9}</b></font> '.format(color, type_) + logEntry['text'] + '</pre>'
+
+            self.logBox.appendHtml(text)
+        else:
+            text = str(logEntry)
+            self.logBox.appendPlainText(text)
+
     def setController(self, controller):
         self.controller = controller
+        self.controller.setCommunicationLogger(self.addLogEntry)
 
 if __name__ == '__main__':
+    logging.basicConfig(level='DEBUG')
+
     app = QApplication([])
 
     controller = Controller()
