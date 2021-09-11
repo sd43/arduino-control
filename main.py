@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import logging
+from config import JsonConfig
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIntValidator
@@ -8,8 +9,10 @@ from PyQt5.QtGui import QIntValidator
 from control import Controller
 
 class ControlWindow(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, config=None):
         super(ControlWindow, self).__init__(parent)
+
+        self.config = config
 
         self.createConnectionBar()
         self.createControlBox()
@@ -18,9 +21,18 @@ class ControlWindow(QDialog):
 
         mainLayout = QVBoxLayout()
         mainLayout.addLayout(self.connectionBar)
-        mainLayout.addLayout(self.controlBox)
-        mainLayout.addLayout(self.commandBox)
-        mainLayout.addWidget(self.logBox)
+
+        tabWidget = QTabWidget()
+        controlTab = QWidget()
+        controlTab.setLayout(self.controlBox)
+        tabWidget.addTab(controlTab, "Control")
+        commandTab = QWidget()
+        commandTab.setLayout(self.commandBox)
+        tabWidget.addTab(commandTab, "Command")
+        mainLayout.addWidget(tabWidget)
+
+        mainLayout.addLayout(self.logBox)
+
         self.setLayout(mainLayout)
 
     def showError(self, message):
@@ -66,7 +78,7 @@ class ControlWindow(QDialog):
         wConnect.clicked.connect(onConnect)
         wDisconnect.clicked.connect(onDisconnect)
 
-        layout.addWidget(QLabel('server:'))
+        layout.addWidget(QLabel('Server:'))
         layout.addWidget(wServer)
         layout.addWidget(wConnect)
         layout.addWidget(wDisconnect)
@@ -88,26 +100,7 @@ class ControlWindow(QDialog):
         self.controlBox = layout
 
     def createCommandBox(self):
-        items = [
-                {
-                    'label': 'Read Pin',
-                    'command': 'read',
-                    'inputs': [ {'name': 'Pin', 'type': 'int' } ],
-                    'outputs': [ {'name': 'Value', 'type': 'int' } ],
-                },
-                {
-                    'label': 'Write Pin',
-                    'command': 'write',
-                    'inputs': [ {'name': 'Pin', 'type': 'int' }, {'name': 'Value', 'type': 'int' } ],
-                    'outputs': [ ],
-                },
-                {
-                    'label': 'Ping',
-                    'command': 'ping',
-                    'inputs': [],
-                    'outputs': [],
-                },
-        ]
+        items = self.config.getCommands()
 
         layout = QGridLayout()
         row = 0 
@@ -162,8 +155,16 @@ class ControlWindow(QDialog):
         self.commandBox = layout
 
     def createLogBox(self):
-        self.logBox = QPlainTextEdit()
-        self.logBox.setReadOnly(True)
+        layout = QVBoxLayout()
+
+        layout.addWidget(QLabel('Message Log'))
+
+        self.logBoxTextEdit = QPlainTextEdit()
+        self.logBoxTextEdit.setReadOnly(True)
+
+        layout.addWidget(self.logBoxTextEdit)
+
+        self.logBox = layout
 
     def addLogEntry(self, logEntry):
         if 'type' in logEntry:
@@ -179,10 +180,10 @@ class ControlWindow(QDialog):
 
             text = '<pre><font color="{}"><b>{:<9}</b></font> '.format(color, type_) + logEntry['text'] + '</pre>'
 
-            self.logBox.appendHtml(text)
+            self.logBoxTextEdit.appendHtml(text)
         else:
             text = str(logEntry)
-            self.logBox.appendPlainText(text)
+            self.logBoxTextEdit.appendPlainText(text)
 
     def setController(self, controller):
         self.controller = controller
@@ -191,10 +192,12 @@ class ControlWindow(QDialog):
 if __name__ == '__main__':
     logging.basicConfig(level='DEBUG')
 
+    cfg = JsonConfig(commandsFile='commands.json')
+
     app = QApplication([])
 
     controller = Controller()
-    controlWindow = ControlWindow()
+    controlWindow = ControlWindow(config=cfg)
     controlWindow.setController(controller)
     controlWindow.show()
     app.exec_()

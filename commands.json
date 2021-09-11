@@ -1,0 +1,40 @@
+[
+  {
+    "label": "Read Pin",
+    "command": "read",
+    "inputs": [
+      {
+        "name": "Pin",
+        "type": "int"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "Value",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "label": "Write Pin",
+    "command": "write",
+    "inputs": [
+      {
+        "name": "Pin",
+        "type": "int"
+      },
+      {
+        "name": "Value",
+        "type": "int"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "label": "Ping",
+    "command": "ping",
+    "inputs": [],
+    "outputs": []
+  }
+]
+
