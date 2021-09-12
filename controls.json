@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Servo 1",
+    "id": "servo1",
+    "type": "analogOutput",
+    "pin": 1,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "Servo 2",
+    "id": "servo2",
+    "type": "analogOutput",
+    "pin": 2,
+    "min": 0,
+    "max": 255
+  },
+  {
+    "name": "Switch 1",
+    "id": "switch1",
+    "type": "digitalOutput",
+    "pin": 3,
+    "off": 0,
+    "on": 1,
+    "defaultState": "off"
+  }
+]
