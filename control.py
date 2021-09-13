@@ -1,75 +1,42 @@
-import socket
-import sys
-import logging
+from controller  import WRITE_PIN, READ_PIN
 
-class Controller():
-    def __init__(self):
-        self.server = None
-        self.sock = None
-        self.commandId = 0
-        self.connectTimeout = 2
+class BaseOutputControl():
+    def __init__(self, control, controller):
+        self.controller = controller
+        self.control = control
 
-        self.commLogger = None
+    def writeValue(self, value):
+        res = self.controller.command(WRITE_PIN, [ self.control.pin, value ])
+        if not res.isSuccess():
+            raise Exception('writing control value failed: {}'.format(res.errorMessage))
 
-        self.sockR, self.sockW = None, None
+        return res.isSuccess()
 
-    def setServer(self, host, port):
-        self.server = (host, port)
+    def readValue(self):
+        res = self.controller.command(READ_PIN, [ self.control.pin ])
+        if not res.isSuccess():
+            raise Exception('reading control value failed: {}'.format(res.errorMessage))
 
-    def setCommunicationLogger(self, fn):
-        self.commLogger = fn
+        return res.results[0]
 
-    def disconnect(self):
-        if self.sock:
-            try:
-                self.sock.close()
-                self.sockR.close()
-                self.sockW.close()
-            except:
-                pass
+class AnalogOutputControl(BaseOutputControl):
+    def __init__(self, control, controller):
+        super(AnalogOutputControl, self).__init__(control, controller)
 
-    def connect(self):
-        self.disconnect()
+    def setValue(self, value):
+        return self.writeValue(self, value)
 
-        try:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect(self.server)
-            self.sockR = self.sock.makefile('r')
-            self.sockW = self.sock.makefile('w')
-            self.commandId = 0
+    def getValue(self):
+        return self.readValue()
 
-            output = self.recv()
-            logging.info("connected to server {}: {}".format(self.server, output))
-        except Exception as e:
-            logging.error("failed to connect to server {}".format(self.server))
-            raise(e)
+class DigitalOutputControl(BaseOutputControl):
+    def __init__(self, control, controller):
+        super(AnalogOutputControl, self).__init__(control, controller)
 
-    def recv(self):
-        text = self.sockR.readline()
-        text = text.rstrip('\n\r')
-        logging.info("recv {}".format(text))
-        if self.commLogger:
-            self.commLogger({'type':'read', 'text': text})
-        return text
+    def setHigh(self):
+        self.writeValue(1)
 
-    def send(self, text):
-        text = text.rstrip('\n\r')
-        logging.info("send {}".format(text))
-        if self.commLogger:
-            self.commLogger({'type':'write', 'text': text})
-        self.sockW.write(text + '\n');
-        self.sockW.flush()
-
-    def command(self, command, args=[]):
-        if self.sock is None:
-            raise Exception("not connected to server")
-
-        self.commandId += 1
-        argstr = ','.join([str(arg) for arg in args])
-        s = '{}:{}:{}'.format(self.commandId, command, argstr)
-        self.send(s)
-
-        output = self.recv()
-        return output
+    def setLow(self):
+        self.writeValue(0)
 
 

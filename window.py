@@ -1,15 +1,21 @@
+import os
 import logging
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIntValidator
 
 from control_box import ControlBox
+from command_box import CommandBox
 
-class MainWindow(QDialog):
-    def __init__(self, parent=None, config=None):
+class MainWindow(QMainWindow):
+    def __init__(self, config, controller, parent=None):
         super(MainWindow, self).__init__(parent)
 
         self.config = config
+        self.setController(controller)
+
+        self.setWindowTitle('Control Over Ethernet')
+        self.createMenus()
 
         self.createConnectionBar()
         self.createControlBox()
@@ -19,19 +25,30 @@ class MainWindow(QDialog):
         mainLayout = QVBoxLayout()
         mainLayout.addLayout(self.connectionBar)
 
-        tabWidget = QTabWidget()
-        tabWidget.addTab(self.controlBox, "Control")
-        commandTab = QWidget()
-        commandTab.setLayout(self.commandBox)
-        tabWidget.addTab(commandTab, "Command")
-        mainLayout.addWidget(tabWidget)
+        self.tabWidget = QTabWidget()
+        self.tabWidget.addTab(self.controlBox, "Control")
+        self.tabWidget.addTab(self.commandBox, "Command")
+        mainLayout.addWidget(self.tabWidget)
 
         mainLayout.addLayout(self.logBox)
 
-        self.setLayout(mainLayout)
+        centralWidget = QWidget()
+        centralWidget.setLayout(mainLayout)
+        self.setCentralWidget(centralWidget)
+        self.enableControls(False)
+
+    def createMenus(self):
+        fileMenu = self.menuBar().addMenu('&File')
+        exitAction = QAction('E&xit')
+        exitAction.triggered.connect(lambda: os.exit(0))
+        fileMenu.addAction(exitAction)
 
     def showError(self, message):
         QMessageBox.critical(self, 'Error', message)
+
+    def enableControls(self, enable=True):
+        for i in range(0, self.tabWidget.count()):
+            self.tabWidget.widget(i).setEnabled(enable)
 
     def createConnectionBar(self):
         layout = QHBoxLayout()
@@ -52,7 +69,7 @@ class MainWindow(QDialog):
                     self.controller.setServer(host, port)
                     self.controller.connect()
 
-                    wServer.setReadOnly(True)
+                    wServer.setEnabled(False)
                     wDisconnect.show()
                     wConnect.hide()
                 except ValueError:
@@ -66,10 +83,11 @@ class MainWindow(QDialog):
             except Exception as e:
                 self.showError('Failed to disconnect: ' + str(e))
 
-            wServer.setReadOnly(False)
+            wServer.setEnabled(True)
             wDisconnect.hide()
             wConnect.show()
 
+        wServer.returnPressed.connect(onConnect)
         wConnect.clicked.connect(onConnect)
         wDisconnect.clicked.connect(onDisconnect)
 
@@ -85,59 +103,8 @@ class MainWindow(QDialog):
         self.controlBox = ControlBox(config=config, columns=2)
 
     def createCommandBox(self):
-        items = self.config.getCommands()
-
-        layout = QGridLayout()
-        row = 0 
-
-        layout.addWidget(QLabel('<i>Command</i>'), row, 0)
-        layout.addWidget(QLabel('<i>Inputs</i>'), row, 1)
-        layout.addWidget(QLabel('<i>Outputs</i>'), row, 2)
-        layout.addWidget(QLabel('<i>Send</i>'), row, 3)
-
-        for item in items:
-            row += 1
-            layout.addWidget(QLabel('<b>'+item['label']+'</b>'), row, 0)
-            wInputs = []
-            wOutputs = []
-
-            if len(item['inputs']) > 0:
-                wLayout = QHBoxLayout()
-                for inp in item['inputs']:
-                    wInput = QLineEdit(placeholderText=inp['name'])
-                    if inp['type'] == 'int':
-                        wInput.setValidator(QIntValidator(0, 999999))
-
-                    wInputs.append(wInput)
-                    wLayout.addWidget(wInput)
-                layout.addLayout(wLayout, row, 1)
-
-            if len(item['outputs']) > 0:
-                wLayout = QHBoxLayout()
-                for out in item['outputs']:
-                    wOutput = QLineEdit(placeholderText=out['name'])
-                    wOutput.setReadOnly(True)
-                    wOutputs.append(wOutput)
-                    wLayout.addWidget(wOutput)
-                layout.addLayout(wLayout, row, 2)
-
-            def onSendCallback(command, wInputs, wOutputs):
-                def fn():
-                    try:
-                        args = [ w.text() for w in wInputs ]
-                        output = self.controller.command(command, args)
-                        for (wOutput, output) in zip(wOutputs, output.split(',')):
-                            wOutput.setText(output)
-
-                    except Exception as e:
-                        self.showError('Failed to send command: ' + str(e))
-                return fn
-
-            wSend = QPushButton('->')
-            wSend.clicked.connect(onSendCallback(item['command'], wInputs, wOutputs))
-            layout.addWidget(wSend, row, 3)
-
-        self.commandBox = layout
+        config = self.config.getCommands()
+        self.commandBox = CommandBox(config=config, controller=self.controller)
 
     def createLogBox(self):
         layout = QVBoxLayout()
@@ -173,4 +140,5 @@ class MainWindow(QDialog):
     def setController(self, controller):
         self.controller = controller
         self.controller.setCommunicationLogger(self.addLogEntry)
+        self.controller.setConnectionCallback(lambda connected: self.enableControls(connected))
 

@@ -55,5 +55,11 @@ class JsonConfig():
             controls = json.loads(data)
             self.controls = [ ControlConfig(c) for c in controls ]
 
+            seenIds = set()
+            for c in self.controls:
+                if c.id in seenIds:
+                    raise Exception("Duplicate control ID: {}".format(c.id))
+                seenIds.add(c.id)
+
         return self.controls
 

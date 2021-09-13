@@ -6,7 +6,7 @@ from window import MainWindow
 
 from PyQt5.QtWidgets import *
 
-from control import Controller
+from controller import Controller
 
 if __name__ == '__main__':
     logging.basicConfig(level='DEBUG')
@@ -16,8 +16,7 @@ if __name__ == '__main__':
     app = QApplication([])
 
     controller = Controller()
-    controlWindow = MainWindow(config=cfg)
-    controlWindow.setController(controller)
+    controlWindow = MainWindow(config=cfg, controller=controller)
     controlWindow.show()
     app.exec_()
 
