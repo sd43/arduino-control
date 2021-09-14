@@ -2,6 +2,13 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIntValidator
 
+class HeadingLabel(QLabel):
+    def __init__(self, text, parent=None):
+        super(HeadingLabel, self).__init__(parent)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        self.setText('<b><u>'+text+'</b></u>')
+
 class CommandBox(QWidget):
     def __init__(self, config, controller, parent=None):
         super(CommandBox, self).__init__(parent)
@@ -12,18 +19,19 @@ class CommandBox(QWidget):
         self.createWidgets()
 
     def createWidgets(self):
-        items = self.config
+        commands = self.config
         layout = QGridLayout()
+
         row = 0 
+        layout.addWidget(HeadingLabel('Command'), row, 0)
+        layout.addWidget(HeadingLabel('Inputs'), row, 1)
+        layout.addWidget(HeadingLabel('Outputs'), row, 2)
+        layout.addWidget(HeadingLabel('Send'), row, 3)
+        layout.addWidget(HeadingLabel('Send'), row, 3)
 
-        layout.addWidget(QLabel('<i>Command</i>'), row, 0)
-        layout.addWidget(QLabel('<i>Inputs</i>'), row, 1)
-        layout.addWidget(QLabel('<i>Outputs</i>'), row, 2)
-        layout.addWidget(QLabel('<i>Send</i>'), row, 3)
-
-        for item in items:
+        for command in commands:
             row += 1
-            layout.addWidget(QLabel('<b>'+item['label']+'</b>'), row, 0)
+            layout.addWidget(QLabel('<b>'+command['label']+'</b>'), row, 0)
             wInputs = []
             wOutputs = []
 
@@ -39,32 +47,37 @@ class CommandBox(QWidget):
                         self.showError('Failed to send command: ' + str(e))
                 return fn
 
-            onSend = onSendCallback(item['command'], wInputs, wOutputs)
+            onSend = onSendCallback(command['command'], wInputs, wOutputs)
 
-            if len(item['inputs']) > 0:
+            if len(command['inputs']) > 0:
                 wLayout = QHBoxLayout()
-                for inp in item['inputs']:
+                for inp in command['inputs']:
                     wInput = QLineEdit(placeholderText=inp['name'])
                     wInput.returnPressed.connect(onSend)
+                    wInput.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
                     if inp['type'] == 'int':
                         wInput.setValidator(QIntValidator(0, 999999))
 
                     wInputs.append(wInput)
-                    wLayout.addWidget(wInput)
+                    wLayout.addWidget(wInput, alignment=Qt.AlignLeft)
                 layout.addLayout(wLayout, row, 1)
 
-            if len(item['outputs']) > 0:
+            if len(command['outputs']) > 0:
                 wLayout = QHBoxLayout()
-                for out in item['outputs']:
+                for out in command['outputs']:
                     wOutput = QLineEdit(placeholderText=out['name'])
+                    wOutput.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
                     wOutput.setReadOnly(True)
                     wOutputs.append(wOutput)
-                    wLayout.addWidget(wOutput)
+                    wLayout.addWidget(wOutput, alignment=Qt.AlignLeft)
                 layout.addLayout(wLayout, row, 2)
 
             wSend = QPushButton('->')
             wSend.clicked.connect(onSend)
             layout.addWidget(wSend, row, 3)
 
-            self.setLayout(layout)
+        mainLayout = QVBoxLayout()
+        mainLayout.addLayout(layout)
+        mainLayout.addStretch(1)
+        self.setLayout(mainLayout)
 

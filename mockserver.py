@@ -20,6 +20,8 @@ sock.bind(('localhost', 5000))
 
 sock.listen(5)
 
+controlState = {}
+
 while True:
     conn, addr = sock.accept()
 
@@ -69,13 +71,19 @@ while True:
                     status = STATUS_ERROR
                     results = [ 'bad arguments' ]
                 else:
+                    control = arguments[0]
+                    if control not in controlState:
+                        controlState[control] = 0
                     status = STATUS_OK
-                    results = [ '999' ]
+                    results = [ str(controlState[control]) ]
             elif command == 'write':
                 if len(arguments) != 2:
                     status = STATUS_ERROR
                     results = [ 'bad arguments' ]
                 else:
+                    control = arguments[0]
+                    value = arguments[1]
+                    controlState[control] = value
                     status = STATUS_OK
             else:
                 status = STATUS_ERROR

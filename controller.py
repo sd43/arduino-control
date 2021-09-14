@@ -3,8 +3,8 @@ import sys
 import logging
 
 # Commands
-WRITE_PIN = 'write'
-READ_PIN  = 'read'
+WRITE = 'write'
+READ  = 'read'
 
 class Output():
     def __init__(self, id, status, results):
@@ -24,11 +24,11 @@ class Controller():
     def __init__(self):
         self.server = None
         self.sock = None
-        self.commandId = 0
+        self.commandIndex = 0
         self.connectTimeout = 2
 
         self.commLogger = None
-        self.connectionCallback = None
+        self.connectionCallbacks = []
 
         self.sockR, self.sockW = None, None
 
@@ -38,8 +38,11 @@ class Controller():
     def setCommunicationLogger(self, fn):
         self.commLogger = fn
 
-    def setConnectionCallback(self, fn):
-        self.connectionCallback = fn
+    def addConnectionCallback(self, fn):
+        self.connectionCallbacks.append(fn)
+
+    def removeConnectionCallback(self, fn):
+        self.connectionCallbacks.remove(fn)
 
     def disconnect(self):
         if self.sock:
@@ -51,8 +54,8 @@ class Controller():
             except:
                 pass
             finally:
-                if self.connectionCallback:
-                    self.connectionCallback(False)
+                for fn in self.connectionCallbacks:
+                    fn(False)
 
     def connect(self):
         self.disconnect()
@@ -62,15 +65,15 @@ class Controller():
             sock.connect(self.server)
             self.sockR = sock.makefile('r')
             self.sockW = sock.makefile('w')
-            self.commandId = 0
+            self.commandIndex = 0
 
             output = self.recv()
             logging.info("connected to server {}: {}".format(self.server, output))
 
             self.sock = sock
 
-            if self.connectionCallback:
-                self.connectionCallback(True)
+            for fn in self.connectionCallbacks:
+                fn(True)
         except Exception as e:
             logging.error("failed to connect to server {}".format(self.server))
             raise(e)
@@ -103,13 +106,14 @@ class Controller():
             self.disconnect()
             raise(e)
 
-    def command(self, command, args=[]):
+    def command(self, command, args=[], idSuffix=''):
         if self.sock is None:
             raise Exception("not connected to server")
 
-        self.commandId += 1
+        self.commandIndex += 1
+        commandId = '{}{}'.format(self.commandIndex, idSuffix)
         argstr = ','.join([str(arg) for arg in args])
-        s = '{}:{}:{}'.format(self.commandId, command, argstr)
+        s = '{}:{}:{}'.format(commandId, command, argstr)
         self.send(s)
 
         output = self.recv()

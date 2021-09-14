@@ -2,7 +2,6 @@ import os
 import logging
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIntValidator
 
 from control_box import ControlBox
 from command_box import CommandBox
@@ -30,7 +29,7 @@ class MainWindow(QMainWindow):
         self.tabWidget.addTab(self.commandBox, "Command")
         mainLayout.addWidget(self.tabWidget)
 
-        mainLayout.addLayout(self.logBox)
+        mainLayout.addWidget(self.logBox)
 
         centralWidget = QWidget()
         centralWidget.setLayout(mainLayout)
@@ -100,7 +99,7 @@ class MainWindow(QMainWindow):
 
     def createControlBox(self):
         config = self.config.getControls()
-        self.controlBox = ControlBox(config=config, columns=2)
+        self.controlBox = ControlBox(config=config, controller=self.controller, columns=2)
 
     def createCommandBox(self):
         config = self.config.getCommands()
@@ -108,7 +107,6 @@ class MainWindow(QMainWindow):
 
     def createLogBox(self):
         layout = QVBoxLayout()
-
         layout.addWidget(QLabel('Message Log'))
 
         self.logBoxTextEdit = QPlainTextEdit()
@@ -116,7 +114,9 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.logBoxTextEdit)
 
-        self.logBox = layout
+        frame = QGroupBox()
+        frame.setLayout(layout)
+        self.logBox = frame
 
     def addLogEntry(self, logEntry):
         if 'type' in logEntry:
@@ -140,5 +140,5 @@ class MainWindow(QMainWindow):
     def setController(self, controller):
         self.controller = controller
         self.controller.setCommunicationLogger(self.addLogEntry)
-        self.controller.setConnectionCallback(lambda connected: self.enableControls(connected))
+        self.controller.addConnectionCallback(lambda connected: self.enableControls(connected))
 
