@@ -68,7 +68,7 @@ class Controller():
             self.commandIndex = 0
 
             output = self.recv()
-            logging.info("connected to server {}: {}".format(self.server, output))
+            logging.debug("connected to server {}: {}".format(self.server, output))
 
             self.sock = sock
 
@@ -87,14 +87,14 @@ class Controller():
             raise(e)
 
         text = text.rstrip('\n\r')
-        logging.info("recv {}".format(text))
+        logging.debug("recv {}".format(text))
         if self.commLogger:
             self.commLogger({'type':'read', 'text': text})
         return text
 
     def send(self, text):
         text = text.rstrip('\n\r')
-        logging.info("send {}".format(text))
+        logging.debug("send {}".format(text))
         if self.commLogger:
             self.commLogger({'type':'write', 'text': text})
 

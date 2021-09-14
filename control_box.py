@@ -8,13 +8,14 @@ class Slider(QWidget):
     def __init__(self, control, low=0, high=100, parent=None):
         super(Slider, self).__init__(parent)
 
+        self.control = control
+
         layout = QHBoxLayout()
         layout.addWidget(QLabel(str(low)))
 
         self.slider = QSlider(orientation=Qt.Horizontal)
         self.slider.setMinimum(low)
         self.slider.setMaximum(high)
-        self.slider.setTracking(False)
         layout.addWidget(self.slider, stretch=4)
 
         layout.addWidget(QLabel(str(high)))
@@ -25,19 +26,33 @@ class Slider(QWidget):
 
         self.textEdit.setText(str(self.slider.value()))
 
-        self.slider.valueChanged.connect(self.sliderValueChangedCallback)
-        self.textEdit.returnPressed.connect(lambda: self.slider.setValue(int(self.textEdit.text())))
+        # value of the underlying control is only changed on these events
+        self.slider.sliderReleased.connect(self.sliderReleasedCallback)
+        self.textEdit.returnPressed.connect(self.returnPressedCallback)
+
+        # these events only trigger updation of the UI
+        self.slider.sliderPressed.connect(self.sliderMovedCallback)
+        self.slider.sliderMoved.connect(self.sliderMovedCallback)
+        self.slider.valueChanged.connect(self.sliderMovedCallback)
 
         self.setLayout(layout)
 
-        self.control = control
         self.control.addOnChangeCallback(lambda value: self.slider.setValue(int(value)))
 
-    def sliderValueChangedCallback(self, value):
+    def returnPressedCallback(self):
+        value = int(self.textEdit.text())
+        self.slider.setValue(value)
+        self.control.setValue(value)
+
+    def sliderMovedCallback(self):
+        value = self.slider.sliderPosition()
         if self.textEdit.text() != str(value):
             self.textEdit.setText(str(value))
 
+    def sliderReleasedCallback(self):
+        value = self.slider.sliderPosition()
         self.control.setValue(value)
+        self.sliderMovedCallback()
 
 class Switch(QWidget):
     def __init__(self, control, parent=None):
