@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 
 from control_box import ControlBox
 from command_box import CommandBox
+from connection_bar import ConnectionBar
 
 class MainWindow(QMainWindow):
     def __init__(self, config, controller, parent=None):
@@ -22,7 +23,7 @@ class MainWindow(QMainWindow):
         self.createLogBox()
 
         mainLayout = QVBoxLayout()
-        mainLayout.addLayout(self.connectionBar)
+        mainLayout.addWidget(self.connectionBar)
 
         self.tabWidget = QTabWidget()
         self.tabWidget.addTab(self.controlBox, "Control")
@@ -50,52 +51,7 @@ class MainWindow(QMainWindow):
             self.tabWidget.widget(i).setEnabled(enable)
 
     def createConnectionBar(self):
-        layout = QHBoxLayout()
-        wServer = QLineEdit('localhost:5000')
-        wConnect = QPushButton('Connect')
-        wDisconnect = QPushButton('Disconnect')
-        wDisconnect.hide()
-
-        def onConnect():
-            logging.info("connecting to server...")
-            addrParts = wServer.text().split(':')
-            if len(addrParts) != 2:
-                self.showError('Invalid server address: ' + wServer.text())
-            else:
-                host = addrParts[0]
-                try:
-                    port = int(addrParts[1])
-                    self.controller.setServer(host, port)
-                    self.controller.connect()
-
-                    wServer.setEnabled(False)
-                    wDisconnect.show()
-                    wConnect.hide()
-                except ValueError:
-                    self.showError('Invalid port: ' + addrParts[1])
-                except Exception as e:
-                    self.showError('Failed to connect to server: ' + str(e))
-
-        def onDisconnect():
-            try:
-                self.controller.disconnect()
-            except Exception as e:
-                self.showError('Failed to disconnect: ' + str(e))
-
-            wServer.setEnabled(True)
-            wDisconnect.hide()
-            wConnect.show()
-
-        wServer.returnPressed.connect(onConnect)
-        wConnect.clicked.connect(onConnect)
-        wDisconnect.clicked.connect(onDisconnect)
-
-        layout.addWidget(QLabel('Server:'))
-        layout.addWidget(wServer)
-        layout.addWidget(wConnect)
-        layout.addWidget(wDisconnect)
-
-        self.connectionBar = layout
+        self.connectionBar = ConnectionBar(self.controller)
 
     def createControlBox(self):
         config = self.config.getControls()
