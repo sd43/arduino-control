@@ -36,7 +36,7 @@ class Controller():
         self.disconnect()
         self.transport.connect()
         if self.commLogger:
-            self.commLogger({'type':'event', 'text': 'connected'})
+            self.commLogger({'type':'event', 'text': Response(status='connected')})
         for fn in self.connectionCallbacks:
             fn(True)
 

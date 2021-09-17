@@ -63,3 +63,8 @@ class JsonConfig():
     def getControls(self):
         return self.config.controls
 
+    def getTitle(self):
+        if 'title' in self.config.meta:
+            return self.config.meta['title']
+        return None
+

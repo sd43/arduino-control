@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
         self.config = config
         self.setController(controller)
 
-        self.setWindowTitle('Control Over Ethernet')
+        self.setWindowTitle(config.getTitle() or 'Arduino Control')
         self.createMenus()
 
         self.createConnectionBar()
@@ -63,17 +63,13 @@ class MainWindow(QMainWindow):
         self.commandBox = CommandBox(config=config, controller=self.controller)
 
     def createLogBox(self):
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel('Message Log'))
+        tabWidget = QTabWidget()
 
-        self.logBoxTextEdit = QPlainTextEdit()
-        self.logBoxTextEdit.setReadOnly(True)
+        self.messageLog = QPlainTextEdit()
+        self.messageLog.setReadOnly(True)
+        tabWidget.addTab(self.messageLog, 'Messages')
 
-        layout.addWidget(self.logBoxTextEdit)
-
-        frame = QGroupBox()
-        frame.setLayout(layout)
-        self.logBox = frame
+        self.logBox = tabWidget
 
     def addLogEntry(self, logEntry):
         if 'type' in logEntry:
@@ -92,10 +88,10 @@ class MainWindow(QMainWindow):
 
             text = '<pre><font color="{}"><b>{:<9}</b></font> '.format(color, type_) + html.escape(str(logEntry['text'])) + '</pre>'
 
-            self.logBoxTextEdit.appendHtml(text)
+            self.messageLog.appendHtml(text)
         else:
             text = str(logEntry)
-            self.logBoxTextEdit.appendPlainText(text)
+            self.messageLog.appendPlainText(text)
 
     def setController(self, controller):
         self.controller = controller

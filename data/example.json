@@ -1,6 +1,6 @@
 {
 	"meta": {
-		"name": "Arduino LED Control"
+		"title": "Arduino LED Control"
 	},
 	"controls": [
 		{
@@ -68,5 +68,4 @@
 			"outputs": []
 		}
 	]
-
 }

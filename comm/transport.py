@@ -12,7 +12,7 @@ class Request():
         return '{:12} {}({})'.format(self.id, self.cmd, argstr)
 
 class Response():
-    def __init__(self, status, results, id=None):
+    def __init__(self, status, results=[], id=None):
         self.id = id
         self.status = status
         self.results = results
@@ -27,7 +27,7 @@ class Response():
 
     def __str__(self):
         resstr =  ','.join([str(x) for x in self.results])
-        return '{:12} {}({})'.format(self.id, self.status, resstr)
+        return '{:12} {}({})'.format(self.id or '', self.status, resstr)
 
 class TcpTransport():
     def __init__(self, host, port):
@@ -44,10 +44,14 @@ class TcpTransport():
             sock.connect(self.server)
             self.sockR = sock.makefile('r')
             self.sockW = sock.makefile('w')
-            self.commandIndex = 0
 
             output = self.recv()
-            logging.debug("connected to server {}: {}".format(self.server, output))
+
+            if output.status == 'connected':
+                logging.debug("connected to server {}: {}".format(self.server, output))
+            else:
+                self.disconnect()
+                raise Exception("Unexpected connection status: {} (full response: {})", output.status, output)
 
             self.sock = sock
         except Exception as e:
