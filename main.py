@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import *
 if __name__ == '__main__':
     logging.basicConfig(level='DEBUG')
 
-    cfg = JsonConfig( controlsFile='data/controls.json', commandsFile='data/commands.json')
+    cfg = JsonConfig(configFile='data/example.json')
 
     app = QApplication([])
 

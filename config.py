@@ -31,35 +31,35 @@ class ControlConfig():
 
         return self.config[key]
 
-class JsonConfig():
-    def __init__(self, commandsFile, controlsFile):
-        self.commands = []
+class Config():
+    def __init__(self):
+        self.meta = {}
         self.controls = []
-        self.commandsFile = commandsFile
-        self.controlsFile = controlsFile
+        self.commands = []
+
+class JsonConfig():
+    def __init__(self, configFile):
+        self.configFile = configFile
+
+        with open(self.configFile, 'r') as f:
+            data = f.read()
+        
+        config = json.loads(data)
+
+        self.config = Config()
+        self.config.meta = config['meta']
+        self.config.controls = [ ControlConfig(c) for c in config['controls'] ]
+        self.config.commands = config['commands']
+
+        seenIds = set()
+        for c in self.config.controls:
+            if c.id in seenIds:
+                raise Exception("Duplicate control ID: {}".format(c.id))
+            seenIds.add(c.id)
 
     def getCommands(self):
-        with open(self.commandsFile, 'r') as f:
-            data = f.read()
-
-        if not self.commands:
-            self.commands = json.loads(data)
-
-        return self.commands
+        return self.config.commands
 
     def getControls(self):
-        if not self.controls:
-            with open(self.controlsFile, 'r') as f:
-                data = f.read()
-            
-            controls = json.loads(data)
-            self.controls = [ ControlConfig(c) for c in controls ]
-
-            seenIds = set()
-            for c in self.controls:
-                if c.id in seenIds:
-                    raise Exception("Duplicate control ID: {}".format(c.id))
-                seenIds.add(c.id)
-
-        return self.controls
+        return self.config.controls
 
