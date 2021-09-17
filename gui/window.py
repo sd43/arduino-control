@@ -86,6 +86,9 @@ class MainWindow(QMainWindow):
             elif logEntry['type'] == 'write':
                 color = 'brown'
                 type_ = 'SEND'
+            elif logEntry['type'] == 'event':
+                color = 'magenta'
+                type_ = 'EVENT'
 
             text = '<pre><font color="{}"><b>{:<9}</b></font> '.format(color, type_) + html.escape(str(logEntry['text'])) + '</pre>'
 
