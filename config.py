@@ -32,7 +32,7 @@ class ControlConfig():
         return self.config[key]
 
 class JsonConfig():
-    def __init__(self, commandsFile='commands.json', controlsFile='controls.json'):
+    def __init__(self, commandsFile, controlsFile):
         self.commands = []
         self.controls = []
         self.commandsFile = commandsFile

@@ -1,6 +1,6 @@
 import logging
 
-from transport import TcpTransport
+from comm.transport import TcpTransport
 
 from PyQt5.QtWidgets import *
 

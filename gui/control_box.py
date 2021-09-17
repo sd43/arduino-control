@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIntValidator
 
-from control import AnalogOutputControl, DigitalOutputControl
+from comm.control import AnalogOutputControl, DigitalOutputControl
 
 class Slider(QWidget):
     def __init__(self, control, low=0, high=100, parent=None):

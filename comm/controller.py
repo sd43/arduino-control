@@ -1,4 +1,4 @@
-from transport import Request, Response, TcpTransport
+from comm.transport import Request, Response, TcpTransport
 
 # Commands
 WRITE = 'write'

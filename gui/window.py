@@ -4,9 +4,9 @@ import html
 
 from PyQt5.QtWidgets import *
 
-from control_box import ControlBox
-from command_box import CommandBox
-from connection_bar import ConnectionBar
+from gui.control_box import ControlBox
+from gui.command_box import CommandBox
+from gui.connection_bar import ConnectionBar
 
 class MainWindow(QMainWindow):
     def __init__(self, config, controller, parent=None):
