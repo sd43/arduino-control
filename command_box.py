@@ -39,7 +39,7 @@ class CommandBox(QWidget):
                 def fn():
                     try:
                         args = [ w.text() for w in wInputs ]
-                        output = self.controller.command(command, args)
+                        output = self.controller.command(command, args, idSuffix='_cmd')
                         for (wOutput, output) in zip(wOutputs, output.results):
                             wOutput.setText(output)
 

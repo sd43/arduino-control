@@ -8,7 +8,7 @@ class Request():
         self.args = args
 
     def __str__(self):
-        argstr =  ','.join([str(x) for x in self.args])
+        argstr =  ', '.join([str(x) for x in self.args])
         return '{:12} {}({})'.format(self.id, self.cmd, argstr)
 
 class Response():
