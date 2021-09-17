@@ -81,3 +81,6 @@ class CommandBox(QWidget):
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
 
+    def showError(self, message):
+        QMessageBox.critical(self, 'Error', message)
+

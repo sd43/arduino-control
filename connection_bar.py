@@ -1,5 +1,7 @@
 import logging
 
+from transport import TcpTransport
+
 from PyQt5.QtWidgets import *
 
 class ConnectionBar(QWidget):
@@ -34,7 +36,8 @@ class ConnectionBar(QWidget):
             host = addrParts[0]
             try:
                 port = int(addrParts[1])
-                self.controller.setServer(host, port)
+                transport = TcpTransport(host, port)
+                self.controller.setTransport(transport)
                 self.controller.connect()
 
                 self.wServer.setEnabled(False)
@@ -54,4 +57,7 @@ class ConnectionBar(QWidget):
         self.wServer.setEnabled(True)
         self.wDisconnect.hide()
         self.wConnect.show()
+
+    def showError(self, message):
+        QMessageBox.critical(self, 'Error', message)
 

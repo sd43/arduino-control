@@ -1,5 +1,6 @@
 import os
 import logging
+import html
 
 from PyQt5.QtWidgets import *
 
@@ -86,7 +87,7 @@ class MainWindow(QMainWindow):
                 color = 'brown'
                 type_ = 'SEND'
 
-            text = '<pre><font color="{}"><b>{:<9}</b></font> '.format(color, type_) + logEntry['text'] + '</pre>'
+            text = '<pre><font color="{}"><b>{:<9}</b></font> '.format(color, type_) + html.escape(str(logEntry['text'])) + '</pre>'
 
             self.logBoxTextEdit.appendHtml(text)
         else:
@@ -95,6 +96,6 @@ class MainWindow(QMainWindow):
 
     def setController(self, controller):
         self.controller = controller
-        self.controller.setCommunicationLogger(self.addLogEntry)
         self.controller.addConnectionCallback(lambda connected: self.enableControls(connected))
+        self.controller.setCommunicationLogger(self.addLogEntry)
 

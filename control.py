@@ -1,4 +1,4 @@
-from controller  import WRITE, READ
+from controller import WRITE, READ
 
 class BaseOutputControl:
     def __init__(self, control, controller):
