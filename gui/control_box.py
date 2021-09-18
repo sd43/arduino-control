@@ -85,41 +85,37 @@ class Switch(QWidget):
             self.button.setStyleSheet('background-color: "grey"')
 
 class ControlWidget(QWidget):
-    def __init__(self, controlConfig, controller, parent=None):
+    def __init__(self, control, parent=None):
         super(ControlWidget, self).__init__(parent)
-
-        c = controlConfig
 
         layout = QVBoxLayout()
 
         header = QHBoxLayout()
-        header.addWidget(QLabel('<b>' + c.name + '</b>'))
+        header.addWidget(QLabel('<b>' + control.control.name + '</b>'))
         layout.addLayout(header)
 
         w = None
+        c = control.control
         # TODO handle signals
-        if c.controlType == 'analogOutput':
-            control = AnalogOutputControl(c, controller)
+        if control.control.controlType == 'analogOutput':
             w = Slider(low=c.min or 0, high=c.max or 255, control=control)
-        elif c.controlType == 'digitalOutput':
-            control = DigitalOutputControl(c, controller)
+        elif control.control.controlType == 'digitalOutput':
             button = Switch(control)
             w = button
         else:
-            raise Exception('Unsupported control type {}'.format(c.type))
+            raise Exception('Unsupported control type {}'.format(control.type))
 
         layout.addWidget(w)
         self.setLayout(layout)
         
 
 class ControlBox(QWidget):
-    def __init__(self, config, controller, columns=3, parent=None):
+    def __init__(self, controls, columns=3, parent=None):
         super(ControlBox, self).__init__(parent)
-        self.config = config
-        self.controller = controller
+        self.controls = controls
 
         layout = QGridLayout()
-        self.controlWidgets = [ ControlWidget(c, controller) for c in self.config ]
+        self.controlWidgets = [ ControlWidget(control) for control in controls ]
 
         for i in range(len(self.controlWidgets)):
             row = i // columns

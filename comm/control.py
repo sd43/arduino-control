@@ -1,5 +1,8 @@
 from comm.controller import WRITE, READ
 
+STATE_STORE_LOCAL  = "local"
+STATE_STORE_REMOTE = "remote"
+
 class BaseOutputControl:
     def __init__(self, control, controller):
         self.controller = controller
@@ -8,6 +11,7 @@ class BaseOutputControl:
         self.onChangeCallbacks = []
         self.controller.addConnectionCallback(self._onControllerConnection)
         self.idSuffix = '_'+control.id
+        self.stateStore = control.stateStore
 
     def fixValue(self, value):
         if isinstance(value, str):
@@ -52,7 +56,8 @@ class BaseOutputControl:
 
     def _onControllerConnection(self, connected):
         if connected:
-            self.readValue()
+            if self.stateStore == STATE_STORE_REMOTE:
+                self.readValue()
 
 class AnalogOutputControl(BaseOutputControl):
     def __init__(self, control, controller):

@@ -9,7 +9,9 @@
 			"type": "analogOutput",
 			"pin": 1,
 			"min": 0,
-			"max": 255
+			"max": 255,
+			"stateStore": "local",
+			"default": 0
 		},
 		{
 			"name": "Servo 2",
@@ -17,7 +19,9 @@
 			"type": "analogOutput",
 			"pin": 2,
 			"min": 0,
-			"max": 255
+			"max": 255,
+			"stateStore": "local",
+			"default": 0
 		},
 		{
 			"name": "Switch 1",
@@ -26,7 +30,8 @@
 			"pin": 3,
 			"off": 0,
 			"on": 1,
-			"defaultState": "off"
+			"stateStore": "local",
+			"default": 0
 		}
 	],
 	"commands": [

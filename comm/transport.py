@@ -2,6 +2,7 @@ import logging
 
 import socket
 import serial, serial.tools.list_ports
+import time
 
 class Request():
     def __init__(self, cmd, args, id=None):
@@ -130,6 +131,8 @@ class SerialTransport():
         return self.connected
 
     def ping(self, attempts=1):
+        attemptDelay = 0.5
+
         for i in range(0, attempts):
             req = Request(id='connect',cmd='ping', args=[])
             self.send(req)
@@ -138,6 +141,9 @@ class SerialTransport():
                 continue
             if resp.id == 'connect':
                 return True
+
+            time.sleep(attemptDelay)
+
         return False
 
     def connect(self):
@@ -165,7 +171,7 @@ class SerialTransport():
     def recv(self, attempts=1):
         try:
             text = ""
-            while attempts > 0:
+            for attempt in range(0, attempts):
                 text = self.serial.readline().decode()
                 if text.startswith(self.OUTPUT_IDENTIFIER):
                     text = text[len(self.OUTPUT_IDENTIFIER):]

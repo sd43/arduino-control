@@ -9,17 +9,18 @@ from gui.command_box import CommandBox
 from gui.connection_bar import ConnectionBar
 
 class MainWindow(QMainWindow):
-    def __init__(self, config, controller, parent=None):
+    def __init__(self, config, controls, controller, parent=None):
         super(MainWindow, self).__init__(parent)
 
         self.config = config
+        self.controls = controls
         self.setController(controller)
 
         self.setWindowTitle(config.getTitle() or 'Arduino Control')
         self.createMenus()
 
         self.createConnectionBar()
-        self.createControlBox()
+        self.createControlBox(controls)
         self.createCommandBox()
         self.createLogBox()
 
@@ -54,9 +55,9 @@ class MainWindow(QMainWindow):
     def createConnectionBar(self):
         self.connectionBar = ConnectionBar(self.controller)
 
-    def createControlBox(self):
+    def createControlBox(self, controls):
         config = self.config.getControls()
-        self.controlBox = ControlBox(config=config, controller=self.controller, columns=2)
+        self.controlBox = ControlBox(controls=controls, columns=2)
 
     def createCommandBox(self):
         config = self.config.getCommands()

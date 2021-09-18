@@ -1,4 +1,5 @@
 import json
+from comm.control import STATE_STORE_LOCAL, STATE_STORE_REMOTE
 
 class ControlConfig():
     """ControlConfig represents the configuration for a particular control"""
@@ -17,6 +18,17 @@ class ControlConfig():
         self.on = self.get('on')
         self.off = self.get('off')
         self.refreshRate = self.get('refreshRate')
+        self.stateStore = self.get('stateStore')
+        self.defaultValue = self.get('default')
+
+        if self.stateStore == None:
+            self.stateStore = STATE_STORE_LOCAL
+        elif self.stateStore == STATE_STORE_LOCAL:
+            pass
+        elif self.stateStore == STATE_STORE_REMOTE:
+            pass
+        else:
+            raise Exception("Invalid stateStore value: {}".format(self.stateStore))
 
     def get(self, key, type_=None, required=False):
         if key not in self.config:
