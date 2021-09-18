@@ -113,8 +113,10 @@ class TcpTransport():
             raise(e)
 
 class SerialTransport():
+    OUTPUT_IDENTIFIER='###'
+
     def __init__(self):
-        pass
+        self.connected = False
 
     def setSerialPort(self, serialPortDevice, baudRate):
         self.device = serialPortDevice
@@ -125,43 +127,68 @@ class SerialTransport():
         return ports
 
     def isConnected(self):
-        pass
+        return self.connected
 
-    def ping(self):
-        req = Request(id='connect',cmd='ping')
-        self.send(req)
+    def ping(self, attempts=1):
+        for i in range(0, attempts):
+            req = Request(id='connect',cmd='ping', args=[])
+            self.send(req)
+            resp = self.recv()
+            if resp == None:
+                continue
+            if resp.id == 'connect':
+                return True
+        return False
 
     def connect(self):
-        self.serial = serial.Serial(self.device, self.baudRate, timeout=5)
+        self.serial = serial.Serial(self.device, self.baudRate, timeout=2)
+        self.serial.reset_input_buffer()
 
         try:
-            self.ping()
+            if self.ping(attempts=3):
+                self.connected = True
+            else:
+                raise Exception("did not get a response from the server")
         except Exception as e:
-            logging.error("failed to connect to server {}".format(self.server))
+            logging.error("failed to connect to server {}".format(self.device))
             raise(e)
         
     def disconnect(self):
         if self.isConnected():
             try:
+                self.connected = False
                 self.serial.close()
             finally:
                 return True
         return False
 
-    def recv(self):
+    def recv(self, attempts=1):
         try:
-            text = self.serial.readline()
+            text = ""
+            while attempts > 0:
+                text = self.serial.readline().decode()
+                if text.startswith(self.OUTPUT_IDENTIFIER):
+                    text = text[len(self.OUTPUT_IDENTIFIER):]
+                    break
+                else:
+                    logging.debug("received " + text)
+                attempts-=1
         except Exception as e:
             logging.error("failed to read data: {}".format(str(e)))
             self.disconnect()
             raise(e)
 
+        if attempts == 0:
+            return None
+
         text = text.rstrip('\n\r')
         logging.debug("recv {}".format(text))
 
         parts = text.split(':')
+        if len(parts) == 4 and parts[3] == '':
+            parts = parts[:3]
         if len(parts) != 3:
-            raise Exception('bad message format from server: "{}"'.format(output))
+            raise Exception('bad message format from server: "{}"'.format(text))
         commandId, status, results = parts
         results = results.split(',')
 
@@ -174,6 +201,7 @@ class SerialTransport():
 
         try:
             self.serial.write(text.encode())
+            self.serial.flush()
         except Exception as e:
             logging.error("failed to send data: {}".format(str(e)))
             self.disconnect()

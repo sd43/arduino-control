@@ -83,7 +83,7 @@ class SerialConnectionBar(QWidget):
         layout = QHBoxLayout()
         self.wSerialPort = QComboBox()
         self.updateSerialPortList()
-        self.baudRates = [2400, 4800, 9600, 14400, 19200, 2800, 38400, 57600, 76800, 115200]
+        self.baudRates = [9600]
         self.wBaudRate = QComboBox()
         for b in self.baudRates:
             self.wBaudRate.addItem(str(b))
